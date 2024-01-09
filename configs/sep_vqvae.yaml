@@ -68,8 +68,8 @@ optimizer:
 # schedular: []
 data:
     name: aist   
-    train_dir: data/aistpp_train_wav
-    test_dir: data/aistpp_test_full_wav
+    train_dir: /home/kim/Documents/Bailando/Bailando/data/aistpp_train_wav
+    test_dir: /home/kim/Documents/Bailando/Bailando/data/aistpp_test_full_wav
     seq_len: 240
     data_type: None
 testing:
