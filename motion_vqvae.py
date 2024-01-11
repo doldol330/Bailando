@@ -48,7 +48,7 @@ class MoQ():
         optimizer = self.optimizer
         log = Logger(self.config, self.expdir)
         updates = 0
-        
+        #사전학습 가중치 있으면 불러옴
         if hasattr(config, 'init_weight') and config.init_weight is not None and config.init_weight is not '':
             print('Use pretrained model!')
             print(config.init_weight)  
@@ -71,7 +71,7 @@ class MoQ():
                 # LR Scheduler missing
                 # pose_seq = map(lambda x: x.to(self.device), batch)
                 trans = None
-                pose_seq = batch.to(self.device)
+                pose_seq = batch.to(self.device)   ##pose 위치 정규화 코드, config의 rotmat, glo_vel에 따라 결정
                 if config.rotmat:
                     # trans = pose_seq[:, :, :3]
                     pose_seq = pose_seq[:, :, 3:]
@@ -83,7 +83,7 @@ class MoQ():
                     pose_seq = pose_seq.clone().detach()
 
                 else:
-                    pose_seq[:, :, :3] = 0
+                    pose_seq[:, :, :3] = 0  
                 # print(pose_seq.size())
                 optimizer.zero_grad()
 
