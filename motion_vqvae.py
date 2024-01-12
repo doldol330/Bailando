@@ -88,7 +88,7 @@ class MoQ():
                 optimizer.zero_grad()
 
                 output, loss, metrics = model(pose_seq)
-
+                loss = loss.sum()
                 loss.backward()
 
                 # update parameters

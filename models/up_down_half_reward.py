@@ -15,11 +15,11 @@ def calc_db(keypoints_seqs):
     beats_np = []
     for keypoints in keypoints_seqs:    
         keypoints = np.array(keypoints).reshape(-1, 24, 3)
-        kinetic_vel = np.mean(np.sqrt(np.sum((keypoints[1:] - keypoints[:-1]) ** 2, axis=2)), axis=1)
-        kinetic_vel = G(kinetic_vel, 5)
+        kinetic_vel = np.mean(np.sqrt(np.sum((keypoints[1:] - keypoints[:-1]) ** 2, axis=2)), axis=1)    #변화량 측정
+        kinetic_vel = G(kinetic_vel, 5)    #노이즈 제거 필터링
         # print(len(kinetic_vel))
-        motion_beats = argrelextrema(kinetic_vel, np.less)
-        beat_np = np.zeros(len(keypoints))
+        motion_beats = argrelextrema(kinetic_vel, np.less)    #신호에서 최소최대 찾음
+        beat_np = np.zeros(len(keypoints))    #최소최대 필터링, 표시
         beat_np[motion_beats] = 1
         beats_np.append(beat_np)
 
