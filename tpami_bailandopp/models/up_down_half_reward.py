@@ -57,7 +57,8 @@ class UpDownReward(nn.Module):
             up_norm = torch.cross(pose[:, :, :, 14, :], pose[:, :, :, 13, :])
             up_norm /= up_norm.norm(dim=-1)[:, :, :, None]
             
-            up_direct = torch.sum(up_norm * (pose[:, :, :, 15, :] - pose[:, :, :, 12, :]), dim=-1)
+            up_side = (pose[:, :, :, 15, :] - pose[:, :, :, 12, :])
+            up_direct = torch.sum(up_norm * up_side, dim=-1)
             up_direct /= up_direct.abs() + 1e-5
             up_norm *= up_direct[:, :, :,  None]
             up_norm[:, :, :, 1] = 0
@@ -65,12 +66,16 @@ class UpDownReward(nn.Module):
             down_norm = torch.cross(pose[:, :, :, 4, :], pose[:, :, :, 5, :])
             down_norm /= down_norm.norm(dim=-1)[:, :, :, None]
             
-            down_direct = torch.sum(down_norm * (pose[:, :, :, 4, :] - pose[:, :, :, 1, :] + pose[:, :, :, 5, :] - pose[:, :, :, 2, :] + pose[:, :, :, 4, :] - pose[:, :, :, 7, :] + pose[:, :, :, 5, :] - pose[:, :, :, 8, :]), dim=-1)
+            down_side = (pose[:, :, :, 4, :] - pose[:, :, :, 1, :] + pose[:, :, :, 5, :] - pose[:, :, :, 2, :] + pose[:, :, :, 4, :] - pose[:, :, :, 7, :] + pose[:, :, :, 5, :] - pose[:, :, :, 8, :])
+            down_direct = torch.sum(down_norm * down_side, dim=-1)
             down_direct /= down_direct.abs() + 1e-5
             down_norm *= up_direct[:, :, :, None]
             down_norm[:, :, :, 1] = 0
-
-            reward = (up_norm * down_norm).sum(dim=-1).min(dim=-1)[0]
+            
+            if (up_side*down_side*up_norm * down_norm).sum(dim=-1) > 0:
+                reward = -abs((up_norm * down_norm).sum(dim=-1).min(dim=-1)[0])
+            else:
+                reward = abs((up_norm * down_norm).sum(dim=-1).min(dim=-1)[0])
             reward[reward >= 0 ] = 1.0
             # qq, ww  = reward.size()
             # reward = reward.view(qq, ww//8, 8)

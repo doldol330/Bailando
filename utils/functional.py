@@ -125,7 +125,7 @@ def img2video(expdir, epoch, audio_path=None):
 
 
     dance_names = sorted(os.listdir(image_dir))
-    audio_dir = "aist_plusplus_final/all_musics"
+    audio_dir = "data/aistpp_music_feat_7.5fps"
     
     music_names = sorted(os.listdir(audio_dir))
     
@@ -162,12 +162,12 @@ def visualize_json(fname_iter, image_dir, dance_name, dance_path, config, quant=
     img = Image.fromarray(read_keypoints(json_file, (config.width, config.height),
                                          remove_face_labels=False, basic_point_only=False))
     img = img.transpose(Image.FLIP_TOP_BOTTOM)
-    img = np.asarray(img)
+    img_copy = np.asarray(img).copy()
     if quant is not None:
-        cv2.putText(img, str(quant[j]), (config.width-400, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 3)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+        cv2.putText(img_copy, str(quant[j]), (config.width-400, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 3)
+    img_copy = cv2.cvtColor(img_copy, cv2.COLOR_BGR2BGRA)
     # img[np.all(img == [0, 0, 0, 255], axis=2)] = [255, 255, 255, 0]
-    img = Image.fromarray(numpy.uint8(img))
+    img = Image.fromarray(numpy.uint8(img_copy))
     img.save(os.path.join(f'{image_dir}/{dance_name}', f'frame{j:06d}.png'))
 
 

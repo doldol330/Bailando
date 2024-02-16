@@ -49,7 +49,7 @@ class MoQ():
         log = Logger(self.config, self.expdir)
         updates = 0
         #사전학습 가중치 있으면 불러옴
-        if hasattr(config, 'init_weight') and config.init_weight is not None and config.init_weight is not '':
+        if hasattr(config, 'init_weight') and config.init_weight != None and config.init_weight != '':
             print('Use pretrained model!')
             print(config.init_weight)  
             checkpoint = torch.load(config.init_weight)

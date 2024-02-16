@@ -56,8 +56,12 @@ class UpDownReward(nn.Module):
 
             up_norm = torch.cross(pose[:, :, :, 14, :], pose[:, :, :, 13, :])
             up_norm /= up_norm.norm(dim=-1)[:, :, :, None]
-            
-            up_direct = torch.sum(up_norm * (pose[:, :, :, 15, :] - pose[:, :, :, 12, :]), dim=-1)
+            #print(up_norm.size())    #(128, 28, 8, 3)
+            up_side = (pose[:, :, :, 15, :] - pose[:, :, :, 12, :])
+            #print(up_side.size())    #(128, 28, 8, 3)
+            up_side[0, 0, 0, [0, 2]]=0
+
+            up_direct = torch.sum(up_norm * up_side, dim=-1)
             up_direct /= up_direct.abs() + 1e-5
             up_norm *= up_direct[:, :, :,  None]
             up_norm[:, :, :, 1] = 0
@@ -65,17 +69,29 @@ class UpDownReward(nn.Module):
             down_norm = torch.cross(pose[:, :, :, 4, :], pose[:, :, :, 5, :])
             down_norm /= down_norm.norm(dim=-1)[:, :, :, None]
             
-            down_direct = torch.sum(down_norm * (pose[:, :, :, 4, :] - pose[:, :, :, 1, :] + pose[:, :, :, 5, :] - pose[:, :, :, 2, :] + pose[:, :, :, 4, :] - pose[:, :, :, 7, :] + pose[:, :, :, 5, :] - pose[:, :, :, 8, :]), dim=-1)
+            down_side = (pose[:, :, :, 4, :] - pose[:, :, :, 1, :] + pose[:, :, :, 5, :] - pose[:, :, :, 2, :] + pose[:, :, :, 4, :] - pose[:, :, :, 7, :] + pose[:, :, :, 5, :] - pose[:, :, :, 8, :])
+            down_side[:, :, :, [0,2]]=0
+
+            down_direct = torch.sum(down_norm * down_side, dim=-1)
             down_direct /= down_direct.abs() + 1e-5
-            down_norm *= up_direct[:, :, :, None]
+            down_norm *= down_direct[:, :, :, None]
             down_norm[:, :, :, 1] = 0
 
-            reward = (up_norm * down_norm).sum(dim=-1).min(dim=-1)[0]
-            reward[reward >= 0 ] = 1.0
-            # qq, ww  = reward.size()
-            # reward = reward.view(qq, ww//8, 8)
-            # reward = 
+        #상/하체가 골반 기준 같은방향인지 판단, y좌표 방향만 고려. N값이 양수-같은 방향, 음수-다른 방향
+            N = torch.sum(up_side * down_side, dim=-1)
+
+        #몸의 앞/뒷면 방향 같은지 판단, xz에 정사영, M값이 양수-같은 방향, 음수-다른 방향
+            M = torch.sum(up_norm * down_norm, dim=-1)
             
+            if (N*M).min(dim=-1)[0].all() < 0:   #N*M의 min값이 0보다 작은 경우 몸이 정상적, 양의 reward
+                reward = abs((up_norm * down_norm).sum(dim=-1).min(dim=-1)[0])    
+            else:    
+                reward = -abs((up_norm * down_norm).sum(dim=-1).min(dim=-1)[0])
+
+            #사실 기존 코드랑 다르게 N, M 값을 모두 계산했으니 reward 아래처럼 바꿔도? 이건 나중에 또 해봐야지
+            #reward = -((N*M).min(dim=-1)[0])
+            reward[reward >= 0] = 1.0
+
             reward *= self.mrate
 
             reward += ba_reward(pose, music)

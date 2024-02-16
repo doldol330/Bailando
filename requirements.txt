@@ -2,13 +2,8 @@ librosa==0.8.1
 essentia
 chumpy
 pyyaml
-numpy
 matplotlib
 opencv-python
 smplx
-pillow
-torch==2.0.1
 easydict
 tqdm
-torchvision 
-torchaudio
